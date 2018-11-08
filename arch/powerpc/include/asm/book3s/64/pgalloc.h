@@ -164,14 +164,12 @@ static inline pgtable_t pmd_pgtable(pmd_t pmd)
 }
 
 #ifdef CONFIG_PPC_4K_PAGES
-static inline pte_t *pte_alloc_one_kernel(struct mm_struct *mm,
-					  unsigned long address)
+static inline pte_t *pte_alloc_one_kernel(struct mm_struct *mm)
 {
 	return (pte_t *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
 }
 
-static inline pgtable_t pte_alloc_one(struct mm_struct *mm,
-				      unsigned long address)
+static inline pgtable_t pte_alloc_one(struct mm_struct *mm)
 {
 	struct page *page;
 	pte_t *pte;
@@ -188,16 +186,14 @@ static inline pgtable_t pte_alloc_one(struct mm_struct *mm,
 }
 #else /* if CONFIG_PPC_64K_PAGES */
 
-static inline pte_t *pte_alloc_one_kernel(struct mm_struct *mm,
-					  unsigned long address)
+static inline pte_t *pte_alloc_one_kernel(struct mm_struct *mm)
 {
-	return (pte_t *)pte_fragment_alloc(mm, address, 1);
+	return (pte_t *)pte_fragment_alloc(mm, 1);
 }
 
-static inline pgtable_t pte_alloc_one(struct mm_struct *mm,
-				      unsigned long address)
+static inline pgtable_t pte_alloc_one(struct mm_struct *mm)
 {
-	return (pgtable_t)pte_fragment_alloc(mm, address, 0);
+	return (pgtable_t)pte_fragment_alloc(mm, 0);
 }
 #endif
 

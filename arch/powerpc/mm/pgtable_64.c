@@ -386,7 +386,7 @@ static pte_t *__alloc_for_cache(struct mm_struct *mm, int kernel)
 	return (pte_t *)ret;
 }
 
-pte_t *pte_fragment_alloc(struct mm_struct *mm, unsigned long vmaddr, int kernel)
+pte_t *pte_fragment_alloc(struct mm_struct *mm, int kernel)
 {
 	pte_t *pte;
 
