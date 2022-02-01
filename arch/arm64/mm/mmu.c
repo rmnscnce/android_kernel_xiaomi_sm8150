@@ -68,6 +68,8 @@ static pte_t bm_pte[PTRS_PER_PTE] __page_aligned_bss;
 static pmd_t bm_pmd[PTRS_PER_PMD] __page_aligned_bss __maybe_unused;
 static pud_t bm_pud[PTRS_PER_PUD] __page_aligned_bss __maybe_unused;
 
+static DEFINE_MUTEX(fixmap_lock);
+
 struct dma_contig_early_reserve {
 	phys_addr_t base;
 	unsigned long size;
@@ -318,6 +320,12 @@ static void alloc_init_pud(pgd_t *pgd, unsigned long addr, unsigned long end,
 	}
 	BUG_ON(pgd_bad(*pgd));
 
+	/*
+	* No need for locking during early boot. And it doesn't work as
+	* expected with KASLR enabled.
+	*/
+    if (system_state != SYSTEM_BOOTING)
+        mutex_lock(&fixmap_lock);
 	pud = pud_set_fixmap_offset(pgd, addr);
 	do {
 		pud_t old_pud = *pud;
@@ -349,6 +357,8 @@ static void alloc_init_pud(pgd_t *pgd, unsigned long addr, unsigned long end,
 	} while (pud++, addr = next, addr != end);
 
 	pud_clear_fixmap();
+	if (system_state != SYSTEM_BOOTING)
+	    mutex_unlock(&fixmap_lock);
 }
 
 static void __create_pgd_mapping(pgd_t *pgdir, phys_addr_t phys,
