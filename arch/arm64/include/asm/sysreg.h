@@ -557,11 +557,9 @@
 
 #define CPACR_EL1_FPEN_EL1EN   (BIT(20)) /* enable EL1 access */
 #define CPACR_EL1_FPEN_EL0EN   (BIT(21)) /* enable EL0 access, if EL1EN set */
-#define CPACR_EL1_FPEN         (CPACR_EL1_FPEN_EL1EN | CPACR_EL1_FPEN_EL0EN)
 
 #define CPACR_EL1_ZEN_EL1EN	(1 << 16) /* enable EL1 access */
 #define CPACR_EL1_ZEN_EL0EN	(1 << 17) /* enable EL0 access, if EL1EN set */
-#define CPACR_EL1_ZEN		(CPACR_EL1_ZEN_EL1EN | CPACR_EL1_ZEN_EL0EN)
 
 
 /* Safe value for MPIDR_EL1: Bit31:RES1, Bit30:U:0, Bit24:MT:0 */
