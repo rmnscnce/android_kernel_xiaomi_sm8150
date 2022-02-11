@@ -6,3 +6,4 @@ obj-$(CONFIG_QCOM_L2_PMU)	+= qcom_l2_pmu.o
 obj-$(CONFIG_QCOM_L3_PMU) += qcom_l3_pmu.o
 obj-$(CONFIG_QCOM_LLCC_PMU) += qcom_llcc_pmu.o
 obj-$(CONFIG_XGENE_PMU) += xgene_pmu.o
+obj-$(CONFIG_MARVELL_CN10K_DDR_PMU) += marvell_cn10k_ddr_pmu.o
