@@ -64,7 +64,7 @@ limit_wd	.req	x13
 mask		.req	x14
 endloop		.req	x15
 
-WEAK(strncmp)
+SYM_FUNC_START(__pi_strncmp)
 	cbz	limit, .Lret0
 	eor	tmp1, src1, src2
 	mov	zeroones, #REP8_01
@@ -307,4 +307,5 @@ CPU_BE( orr	syndrome, diff, has_nul )
 .Lret0:
 	mov	result, #0
 	ret
-ENDPIPROC(strncmp)
+SYM_FUNC_END(__pi_strncmp)
+SYM_FUNC_ALIAS_WEAK(strncmp, __pi_strncmp)

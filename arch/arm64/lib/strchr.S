@@ -29,7 +29,7 @@
  * Returns:
  *	x0 - address of first occurrence of 'c' or 0
  */
-WEAK(strchr)
+SYM_FUNC_START(__pi_strchr)
 	and	w1, w1, #0xff
 1:	ldrb	w2, [x0], #1
 	cmp	w2, w1
@@ -39,4 +39,6 @@ WEAK(strchr)
 	cmp	w2, w1
 	csel	x0, x0, xzr, eq
 	ret
-ENDPROC(strchr)
+SYM_FUNC_END(__pi_strchr)
+
+SYM_FUNC_ALIAS_WEAK(strchr, __pi_strchr)
