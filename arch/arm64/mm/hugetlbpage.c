@@ -27,6 +27,35 @@
 #include <asm/tlbflush.h>
 #include <asm/pgalloc.h>
 
+static bool __hugetlb_valid_size(unsigned long size)
+{
+	switch (size) {
+#ifndef __PAGETABLE_PMD_FOLDED
+    case PUD_SIZE:
+        return pud_sect_supported();
+#endif
+	case CONT_PMD_SIZE:
+	case PMD_SIZE:
+	case CONT_PTE_SIZE:
+		return true;
+	}
+	return false;
+}
+
+#ifdef CONFIG_ARCH_ENABLE_HUGEPAGE_MIGRATION
+bool arch_hugetlb_migration_supported(struct hstate *h)
+{
+    size_t pagesize = huge_page_size(h);
+
+    if (!__hugetlb_valid_size(pagesize)) {
+        pr_warn("%s: unrecognized huge page size 0x%lx\n",
+                __func__, pagesize);
+        return false;
+	}
+    return true;
+}
+#endif
+
 int pmd_huge(pmd_t pmd)
 {
 	return pmd_val(pmd) && !(pmd_val(pmd) & PMD_TABLE_BIT);
@@ -435,4 +464,8 @@ static __init int add_default_hugepagesz(void)
 	return 0;
 }
 arch_initcall(add_default_hugepagesz);
+bool __init arch_hugetlb_valid_size(unsigned long size)
+{
+    return __hugetlb_valid_size(size);
+}
 #endif
