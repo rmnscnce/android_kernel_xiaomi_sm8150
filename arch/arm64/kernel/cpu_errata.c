@@ -154,17 +154,17 @@ static void install_bp_hardening_cb(bp_hardening_cb_t fn,
 
 #include <uapi/linux/psci.h>
 
-static void call_smc_arch_workaround_1(void)
+static noinstr void call_smc_arch_workaround_1(void)
 {
 	arm_smccc_1_1_smc(ARM_SMCCC_ARCH_WORKAROUND_1, NULL);
 }
 
-static void call_hvc_arch_workaround_1(void)
+static noinstr void call_hvc_arch_workaround_1(void)
 {
 	arm_smccc_1_1_hvc(ARM_SMCCC_ARCH_WORKAROUND_1, NULL);
 }
 
-static void qcom_link_stack_sanitization(void)
+static noinstr void qcom_link_stack_sanitization(void)
 {
 	u64 tmp;
 
