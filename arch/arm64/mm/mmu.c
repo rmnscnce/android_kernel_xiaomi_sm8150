@@ -481,8 +481,8 @@ static void __init map_mem(pgd_t *pgd)
 	struct memblock_region *reg;
 	int flags = 0;
 
-	if (debug_pagealloc_enabled())
-		flags = NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
+	if (IS_ENABLED(CONFIG_KFENCE))
+		flags |= NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
 
 	/*
 	 * Take care not to create a writable alias for the
@@ -492,9 +492,14 @@ static void __init map_mem(pgd_t *pgd)
 	 */
 	memblock_mark_nomap(kernel_start, kernel_end - kernel_start);
 #ifdef CONFIG_KEXEC_CORE
-	if (crashk_res.end)
-		memblock_mark_nomap(crashk_res.start,
-				    resource_size(&crashk_res));
+	if (crash_mem_map) {
+        if (IS_ENABLED(CONFIG_ZONE_DMA) ||
+            IS_ENABLED(CONFIG_ZONE_DMA32))
+                flags |= NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
+        else if (crashk_res.end)
+            memblock_mark_nomap(crashk_res.start,
+                resource_size(&crashk_res));
+    }
 #endif
 
 	/* map all the memory banks */
@@ -525,17 +530,16 @@ static void __init map_mem(pgd_t *pgd)
 	memblock_clear_nomap(kernel_start, kernel_end - kernel_start);
 
 #ifdef CONFIG_KEXEC_CORE
-	/*
-	 * Use page-level mappings here so that we can shrink the region
-	 * in page granularity and put back unused memory to buddy system
-	 * through /sys/kernel/kexec_crash_size interface.
-	 */
-	if (crashk_res.end) {
-		__map_memblock(pgd, crashk_res.start, crashk_res.end + 1,
-			       PAGE_KERNEL,
-			       NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS);
-		memblock_clear_nomap(crashk_res.start,
-				     resource_size(&crashk_res));
+	if (crash_mem_map &&
+        !IS_ENABLED(CONFIG_ZONE_DMA) && !IS_ENABLED(CONFIG_ZONE_DMA32)) {
+        if (crashk_res.end) {
+            __map_memblock(pgdp, crashk_res.start,
+                crashk_res.end + 1,
+                PAGE_KERNEL,
+                NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS);
+            memblock_clear_nomap(crashk_res.start,
+                resource_size(&crashk_res));
+		}
 	}
 #endif
 }
