@@ -581,21 +581,23 @@ void f2fs_submit_bio(struct f2fs_sb_info *sbi,
 	__submit_bio(sbi, bio, type);
 }
 
-static void __attach_io_flag(struct f2fs_io_info *fio)
+static unsigned int f2fs_io_flags(struct f2fs_io_info *fio)
 {
-	struct f2fs_sb_info *sbi = fio->sbi;
 	unsigned int temp_mask = (1 << NR_TEMP_TYPE) - 1;
 	unsigned int io_flag, fua_flag, meta_flag;
+	unsigned int op_flags = 0;
 
-	if (fio->type == DATA)
-		io_flag = sbi->data_io_flag;
-	else if (fio->type == NODE)
-		io_flag = sbi->node_io_flag;
-	else
-		return;
+    if (fio->op != REQ_OP_WRITE)
+            return 0;
+    if (fio->type == DATA)
+            io_flag = fio->sbi->data_io_flag;
+    else if (fio->type == NODE)
+            io_flag = fio->sbi->node_io_flag;
+    else
+            return 0;
 
-	fua_flag = io_flag & temp_mask;
-	meta_flag = (io_flag >> NR_TEMP_TYPE) & temp_mask;
+    fua_flag = io_flag & temp_mask;
+    meta_flag = (io_flag >> NR_TEMP_TYPE) & temp_mask;
 
 	/*
 	 * data/node io flag bits per temp:
@@ -604,9 +606,10 @@ static void __attach_io_flag(struct f2fs_io_info *fio)
 	 * Cold | Warm | Hot | Cold | Warm | Hot |
 	 */
 	if ((1 << fio->temp) & meta_flag)
-		fio->op_flags |= REQ_META;
+		op_flags |= REQ_META;
 	if ((1 << fio->temp) & fua_flag)
-		fio->op_flags |= REQ_FUA;
+		op_flags |= REQ_FUA;
+	return op_flags;
 }
 
 static void __submit_merged_bio(struct f2fs_bio_info *io)
@@ -616,8 +619,7 @@ static void __submit_merged_bio(struct f2fs_bio_info *io)
 	if (!io->bio)
 		return;
 
-	__attach_io_flag(fio);
-	bio_set_op_attrs(io->bio, fio->op, fio->op_flags);
+	bio_set_op_attrs(io->bio, fio->op, f2fs_io_flags(fio));
 
 	if (is_read_io(fio->op))
 		trace_f2fs_prepare_read_bio(io->sbi->sb, fio->type, io->bio);
@@ -761,8 +763,7 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
 	if (fio->io_wbc && !is_read_io(fio->op))
 		wbc_account_io(fio->io_wbc, page, PAGE_SIZE);
 
-	__attach_io_flag(fio);
-	bio_set_op_attrs(bio, fio->op, fio->op_flags);
+	bio_set_op_attrs(bio, fio->op, f2fs_io_flags(fio));
 
 	inc_page_count(fio->sbi, is_read_io(fio->op) ?
 			__read_io_type(page): WB_DATA_TYPE(fio->page));
@@ -957,8 +958,7 @@ alloc_new:
 		f2fs_set_bio_crypt_ctx(bio, fio->page->mapping->host,
 				       fio->page->index, fio,
 				       GFP_NOIO);
-		__attach_io_flag(fio);
-		bio_set_op_attrs(bio, fio->op, fio->op_flags);
+		bio_set_op_attrs(bio, fio->op, f2fs_io_flags(fio));
 		add_bio_entry(fio->sbi, bio, page, fio->temp);
 	} else {
 		if (add_ipu_page(fio, &bio, page))
