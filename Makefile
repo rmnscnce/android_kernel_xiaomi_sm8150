@@ -361,8 +361,14 @@ HOST_LFS_CFLAGS := $(shell getconf LFS_CFLAGS 2>/dev/null)
 HOST_LFS_LDFLAGS := $(shell getconf LFS_LDFLAGS 2>/dev/null)
 HOST_LFS_LIBS := $(shell getconf LFS_LIBS 2>/dev/null)
 
+ifneq ($(LLVM),)
+HOSTCC		 = clang
+HOSTCXX		 = clang++
+else
 HOSTCC       = gcc
 HOSTCXX      = g++
+endif
+
 HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 \
 		-fomit-frame-pointer -std=gnu89 $(HOST_LFS_CFLAGS)
 HOSTCXXFLAGS := -O2 $(HOST_LFS_CFLAGS)
@@ -375,6 +381,18 @@ HOSTCFLAGS  += -Wno-unused-value -Wno-unused-parameter \
 endif
 
 # Make variables (CC, etc...)
+CPP		= $(CC) -E
+ifneq ($(LLVM),)
+CC		= clang
+LD		= ld.lld
+AS		= llvm-as
+AR		= llvm-ar
+NM		= llvm-nm
+OBJCOPY		= llvm-objcopy
+OBJDUMP		= llvm-objdump
+READELF		= llvm-readelf
+STRIP		= llvm-strip
+else
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
 REAL_CC		= $(CROSS_COMPILE)gcc
@@ -385,6 +403,7 @@ NM		= $(CROSS_COMPILE)nm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
+endif
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
@@ -824,7 +843,9 @@ ifdef CONFIG_INIT_STACK_ALL_ZERO
 # https://bugs.llvm.org/show_bug.cgi?id=45497. These flags are subject to being
 # renamed or dropped.
 KBUILD_CFLAGS  += -ftrivial-auto-var-init=zero
+ifdef CONFIG_CC_IS_CLANG
 KBUILD_CFLAGS  += -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+endif
 endif
 
 KBUILD_CFLAGS   += $(call cc-option, -fno-var-tracking-assignments)
@@ -883,12 +904,12 @@ endif
 
 ifdef CONFIG_LTO_CLANG
 ifdef CONFIG_THINLTO
-lto-clang-flags	:= -flto=thin
-LDFLAGS		+= --thinlto-cache-dir=.thinlto-cache
+lto-clang-flags	:= -flto=thin -fsplit-lto-unit
+LDFLAGS		+= --thinlto-cache-dir=$(extmod_prefix).thinlto-cache
 else
 lto-clang-flags	:= -flto
 endif
-lto-clang-flags += -fvisibility=default $(call cc-option, -fsplit-lto-unit)
+lto-clang-flags += -fvisibility=hidden
 
 # Limit inlining across translation units to reduce binary size
 LD_FLAGS_LTO_CLANG := -mllvm -import-instr-limit=5
