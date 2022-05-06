@@ -19,7 +19,6 @@
  */
 
 #include <linux/compat.h>
-#include <linux/personality.h>
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>

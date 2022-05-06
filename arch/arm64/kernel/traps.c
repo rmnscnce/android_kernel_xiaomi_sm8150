@@ -19,7 +19,6 @@
 
 #include <linux/bug.h>
 #include <linux/signal.h>
-#include <linux/personality.h>
 #include <linux/kallsyms.h>
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
