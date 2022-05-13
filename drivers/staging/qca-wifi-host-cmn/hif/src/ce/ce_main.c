@@ -910,6 +910,8 @@ static bool ce_mark_datapath(struct CE_state *ce_state)
 	int    i;
 	bool   rc = false;
 
+	map_sz = 0; // Always initialize variables.
+
 	if (ce_state) {
 		hif_select_service_to_pipe_map(ce_state->scn, &svc_map,
 					       &map_sz);

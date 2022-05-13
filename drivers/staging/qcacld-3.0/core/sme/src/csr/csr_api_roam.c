@@ -11073,6 +11073,8 @@ void csr_roam_joined_state_msg_processor(struct mac_context *mac, void *msg_buf)
 		uint32_t sessionId;
 		QDF_STATUS status;
 
+		sessionId = 0; // Always initialize variables.
+
 		sme_debug("ASSOCIATION confirmation can be given to upper layer ");
 		pUpperLayerAssocCnf =
 			(tSirSmeAssocIndToUpperLayerCnf *)msg_buf;
